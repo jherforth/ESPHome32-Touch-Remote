@@ -116,7 +116,7 @@ touchscreen:
     i2c_id: i2c_bus
     interrupt_pin: 21
     reset_pin: 22
-    skip_probe: true
+    skip_probe: false
     update_interval: 50ms
     transform:
       swap_xy: true
@@ -124,7 +124,9 @@ touchscreen:
       mirror_y: true
     on_touch:
       - lambda: |-
-          ESP_LOGI("touch", "x=%d y=%d raw_x=%d raw_y=%d", touch.x, touch.y, touch.x_raw, touch.y_raw);
+          ESP_LOGW("TOUCH_DEBUG", "=== TOUCH DETECTED ===");
+          ESP_LOGW("TOUCH_DEBUG", "x=%d y=%d", touch.x, touch.y);
+          ESP_LOGW("TOUCH_DEBUG", "raw_x=%d raw_y=%d", touch.x_raw, touch.y_raw);
 
 binary_sensor:
   - platform: touchscreen
