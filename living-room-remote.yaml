@@ -136,21 +136,26 @@ binary_sensor:
     y_max: 58
     on_press:
       - lambda: |-
+          ESP_LOGI("touch", "Fan 1 pressed!");
           float pct = id(fan1_pct).state;
           if (std::isnan(pct)) pct = 0;
+          ESP_LOGI("touch", "Current pct: %.0f, setting target to:", pct);
           if (pct < 5) id(target_level) = 33;
           else if (pct < 40) id(target_level) = 66;
           else if (pct < 75) id(target_level) = 100;
           else id(target_level) = 0;
+          ESP_LOGI("touch", "Target level: %d", id(target_level));
       - if:
           condition:
             lambda: 'return id(target_level) == 0;'
           then:
+            - lambda: 'ESP_LOGI("touch", "Calling fan.turn_off");'
             - homeassistant.service:
                 service: fan.turn_off
                 data:
                   entity_id: fan.0x0c2a6ffffeaa1add
           else:
+            - lambda: 'ESP_LOGI("touch", "Calling fan.set_percentage to %d", id(target_level));'
             - homeassistant.service:
                 service: fan.set_percentage
                 data:
@@ -278,11 +283,8 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.living_room_lamp
-                variables:
-                  pct: |-
-                    return id(target_level);
                 data_template:
-                  brightness_pct: "{{ pct | int }}"
+                  brightness_pct: !lambda 'return id(target_level);'
 
 text_sensor:
   - platform: template
