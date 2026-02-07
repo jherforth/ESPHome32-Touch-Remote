@@ -107,8 +107,8 @@ touchscreen:
   - platform: cst816
     id: my_touchscreen
     i2c_id: i2c_bus
-    interrupt_pin: 22
-    reset_pin: 21
+    interrupt_pin: 21
+    reset_pin: 22
     skip_probe: true
     update_interval: 50ms
     transform:
