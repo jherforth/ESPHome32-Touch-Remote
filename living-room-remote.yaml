@@ -4,30 +4,6 @@ esphome:
   min_version: 2025.9.0
   name_add_mac_suffix: false
 
-  on_boot:
-    priority: 600
-    then:
-    - delay: 50ms
-    - output.turn_off: touch_rst     # assert reset (low)
-    - delay: 20ms                    # pulse width
-    - output.turn_on: touch_rst      # release reset
-    - delay: 100ms                   # wait for chip to wake
-    - lambda: |-
-        auto *bus = id(i2c_bus);
-        if (bus == nullptr) {
-          ESP_LOGE("boot", "I2C bus not found!");
-          return;
-        }
-        uint8_t addr = 0x15;
-        uint8_t data[] = {0xA5, 0x01};  // try this first (gesture/normal mode)
-        esp_err_t err = bus->write(addr, data, sizeof(data), true);
-        if (err == ESP_OK) {
-          ESP_LOGI("boot", "CST816 wake write succeeded");
-        } else {
-          ESP_LOGE("boot", "CST816 wake write failed: %d", err);
-        }
-    - delay: 200ms
-
 esp32:
   variant: esp32c6
   framework:
@@ -52,9 +28,9 @@ font:
 
 spi:
   id: spi2_bus
-  clk_pin: 5      # LCD_CLK
-  mosi_pin: 4     # LCD_DIN
-  miso_pin: 19    # Not used, but required for SPI
+  clk_pin: 5
+  mosi_pin: 4
+  miso_pin: 19
 
 i2c:
   sda: 18
@@ -69,13 +45,13 @@ globals:
     type: int
 
 display:
-  - platform: st7789v          # replace with actual supported driver (sh8601 not native in ESPHome)
+  - platform: st7789v
     spi_id: spi2_bus
     model: Waveshare 1.47in 172X320
-    cs_pin: 7                 # LCD_CD
-    dc_pin: 6                 # LCD_DC
-    reset_pin: 14             # LCD_RST
-    backlight_pin: 15         # LCD_BL
+    cs_pin: 7
+    dc_pin: 6
+    reset_pin: 14
+    backlight_pin: 15
     lambda: |-
       it.print(0, 0, id(roboto), "Fan 1: ");
       it.print(100, 0, id(roboto), (bool(id(fan1).state) ? "ON" : "OFF"));
@@ -96,20 +72,13 @@ touchscreen:
   - platform: cst816
     id: my_touchscreen
     i2c_id: i2c_bus
-    interrupt_pin: 22
-    #reset_pin:
-    #  output: touch_rst         # ← no dash here
-    skip_probe: true            # ← same level as other properties
+    reset_pin: 21
+    skip_probe: true
     update_interval: 50ms
     transform:
       swap_xy: true
       mirror_x: false
       mirror_y: false
-    calibration:
-      x_min: 300
-      x_max: 3800
-      y_min: 300
-      y_max: 3800
     on_touch:
       - globals.set:
           id: touch_x
@@ -118,12 +87,6 @@ touchscreen:
           id: touch_y
           value: !lambda "return touch.y;"
       - logger.log: "Touch detected!"
-
-output:
-  - platform: gpio
-    pin: 21
-    id: touch_rst
-    inverted: true
 
 switch:
   - platform: gpio
@@ -146,6 +109,3 @@ switch:
     pin: 2
     name: "Light 3"
     id: light3
-  - platform: output
-    name: "Touch Reset"
-    output: touch_rst
