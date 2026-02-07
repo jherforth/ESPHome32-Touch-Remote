@@ -3,6 +3,22 @@ esphome:
   friendly_name: Living Room Remote
   min_version: 2025.9.0
   name_add_mac_suffix: false
+  on_boot:
+    priority: 600
+    then:
+      - delay: 500ms
+      - lambda: |-
+          auto *bus = id(i2c_bus);
+          uint8_t addr = 0x15;
+          uint8_t data = 0x00;
+          for (int i = 0; i < 10; i++) {
+            auto err = bus->write(addr, &data, 1, true);
+            if (err == ESP_OK) {
+              ESP_LOGI("touch", "CST816D init OK on attempt %d", i + 1);
+              break;
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
+          }
 
 esp32:
   variant: esp32c6
@@ -26,6 +42,12 @@ wifi:
 
 globals:
   - id: target_level
+    type: int
+    initial_value: '0'
+  - id: touch_x
+    type: int
+    initial_value: '0'
+  - id: touch_y
     type: int
     initial_value: '0'
 
@@ -110,23 +132,28 @@ display:
       auto api_color = api_ok ? Color(0, 150, 0) : Color(100, 100, 0);
       it.print(60, 296, id(roboto_small), api_color, id(api_status).state.c_str());
 
+      // Touch debug display
+      it.printf(120, 296, id(roboto_small), Color(255, 255, 0), "X:%d Y:%d", id(touch_x), id(touch_y));
+
 touchscreen:
   - platform: cst816
     id: my_touchscreen
     i2c_id: i2c_bus
-    interrupt_pin: 21
-    reset_pin: 22
-    skip_probe: false
+    skip_probe: true
     update_interval: 50ms
     transform:
       swap_xy: true
-      mirror_x: true
-      mirror_y: true
+      mirror_x: false
+      mirror_y: false
     on_touch:
+      - globals.set:
+          id: touch_x
+          value: !lambda "return touch.x;"
+      - globals.set:
+          id: touch_y
+          value: !lambda "return touch.y;"
       - lambda: |-
-          ESP_LOGW("TOUCH_DEBUG", "=== TOUCH DETECTED ===");
-          ESP_LOGW("TOUCH_DEBUG", "x=%d y=%d", touch.x, touch.y);
-          ESP_LOGW("TOUCH_DEBUG", "raw_x=%d raw_y=%d", touch.x_raw, touch.y_raw);
+          ESP_LOGW("TOUCH", "Touch detected! x=%d y=%d (raw: %d,%d)", touch.x, touch.y, touch.x_raw, touch.y_raw);
 
 binary_sensor:
   - platform: touchscreen
