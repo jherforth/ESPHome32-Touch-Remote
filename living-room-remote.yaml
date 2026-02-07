@@ -13,6 +13,8 @@ logger:
   level: DEBUG
 
 api:
+  encryption:
+    key: !secret api_encryption_key
 
 ota:
   - platform: esphome
@@ -124,9 +126,9 @@ binary_sensor:
     touchscreen_id: my_touchscreen
     name: "Fan 1 Touch"
     x_min: 0
-    x_max: 100
+    x_max: 172
     y_min: 0
-    y_max: 18
+    y_max: 64
     on_press:
       - lambda: |-
           float pct = id(fan1_pct).state;
@@ -157,9 +159,9 @@ binary_sensor:
     touchscreen_id: my_touchscreen
     name: "Fan 2 Touch"
     x_min: 0
-    x_max: 100
-    y_min: 18
-    y_max: 36
+    x_max: 172
+    y_min: 64
+    y_max: 128
     on_press:
       - lambda: |-
           float pct = id(fan2_pct).state;
@@ -190,9 +192,9 @@ binary_sensor:
     touchscreen_id: my_touchscreen
     name: "Light 1 Touch"
     x_min: 0
-    x_max: 100
-    y_min: 36
-    y_max: 55
+    x_max: 172
+    y_min: 128
+    y_max: 192
     on_press:
       - lambda: |-
           float b = id(light1_brightness).state;
@@ -224,9 +226,9 @@ binary_sensor:
     touchscreen_id: my_touchscreen
     name: "Light 2 Touch"
     x_min: 0
-    x_max: 100
-    y_min: 55
-    y_max: 73
+    x_max: 172
+    y_min: 192
+    y_max: 256
     on_press:
       - lambda: |-
           float b = id(light2_brightness).state;
@@ -258,9 +260,9 @@ binary_sensor:
     touchscreen_id: my_touchscreen
     name: "Light 3 Touch"
     x_min: 0
-    x_max: 100
-    y_min: 73
-    y_max: 91
+    x_max: 172
+    y_min: 256
+    y_max: 320
     on_press:
       - lambda: |-
           float b = id(light3_brightness).state;
