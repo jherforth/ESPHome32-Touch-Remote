@@ -41,6 +41,9 @@ font:
   - file: "gfonts://Roboto"
     id: roboto
     size: 20
+  - file: "gfonts://Roboto"
+    id: roboto_large
+    size: 28
 
 spi:
   id: spi2_bus
@@ -54,12 +57,6 @@ i2c:
   scan: true
   id: i2c_bus
 
-globals:
-  - id: touch_x
-    type: int
-  - id: touch_y
-    type: int
-
 display:
   - platform: st7789v
     spi_id: spi2_bus
@@ -71,20 +68,27 @@ display:
       number: 15
       inverted: true
     lambda: |-
-      it.print(0, 0, id(roboto), "Fan 1: ");
-      it.print(100, 0, id(roboto), (bool(id(fan1).state) ? "ON" : "OFF"));
-      it.print(0, 20, id(roboto), "Fan 2: ");
-      it.print(100, 20, id(roboto), (bool(id(fan2).state) ? "ON" : "OFF"));
-      it.print(0, 40, id(roboto), "Light 1: ");
-      it.print(100, 40, id(roboto), (bool(id(light1).state) ? "ON" : "OFF"));
-      it.print(0, 60, id(roboto), "Light 2: ");
-      it.print(100, 60, id(roboto), (bool(id(light2).state) ? "ON" : "OFF"));
-      it.print(0, 80, id(roboto), "Light 3: ");
-      it.print(100, 80, id(roboto), (bool(id(light3).state) ? "ON" : "OFF"));
-      it.print(0, 100, id(roboto), "X: ");
-      it.printf(50, 100, id(roboto), "%d", id(touch_x));
-      it.print(0, 120, id(roboto), "Y: ");
-      it.printf(50, 120, id(roboto), "%d", id(touch_y));
+      int row_h = 64;
+      int text_y_offset = 18;
+      auto on_color = Color(0, 200, 0);
+      auto off_color = Color(200, 0, 0);
+      auto divider = Color(60, 60, 60);
+
+      for (int i = 0; i < 5; i++) {
+        it.line(0, i * row_h, 170, i * row_h, divider);
+      }
+
+      auto draw_row = [&](int row, const char *label, bool state) {
+        int y = row * row_h + text_y_offset;
+        it.print(10, y, id(roboto_large), label);
+        it.print(120, y, id(roboto_large), state ? on_color : off_color, state ? "ON" : "OFF");
+      };
+
+      draw_row(0, "Fan 1", id(fan1).state);
+      draw_row(1, "Fan 2", id(fan2).state);
+      draw_row(2, "Light1", id(light1).state);
+      draw_row(3, "Light2", id(light2).state);
+      draw_row(4, "Light3", id(light3).state);
 
 touchscreen:
   - platform: cst816
@@ -96,14 +100,53 @@ touchscreen:
       swap_xy: true
       mirror_x: false
       mirror_y: false
-    on_touch:
-      - globals.set:
-          id: touch_x
-          value: !lambda "return touch.x;"
-      - globals.set:
-          id: touch_y
-          value: !lambda "return touch.y;"
-      - logger.log: "Touch detected!"
+
+binary_sensor:
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Fan 1 Touch"
+    x_min: 0
+    x_max: 100
+    y_min: 0
+    y_max: 20
+    on_press:
+      - switch.toggle: fan1
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Fan 2 Touch"
+    x_min: 0
+    x_max: 100
+    y_min: 20
+    y_max: 40
+    on_press:
+      - switch.toggle: fan2
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Light 1 Touch"
+    x_min: 0
+    x_max: 100
+    y_min: 40
+    y_max: 60
+    on_press:
+      - switch.toggle: light1
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Light 2 Touch"
+    x_min: 0
+    x_max: 100
+    y_min: 60
+    y_max: 80
+    on_press:
+      - switch.toggle: light2
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Light 3 Touch"
+    x_min: 0
+    x_max: 100
+    y_min: 80
+    y_max: 100
+    on_press:
+      - switch.toggle: light3
 
 switch:
   - platform: gpio
