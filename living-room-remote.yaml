@@ -15,6 +15,7 @@ logger:
 api:
   encryption:
     key: !secret api_encryption_key
+  reboot_timeout: 0s
 
 ota:
   - platform: esphome
@@ -105,6 +106,10 @@ display:
       auto wifi_color = wifi_ok ? Color(0, 150, 0) : Color(100, 0, 0);
       it.print(5, 296, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
 
+      bool api_ok = id(api_status).state == "Connected";
+      auto api_color = api_ok ? Color(0, 150, 0) : Color(100, 100, 0);
+      it.print(60, 296, id(roboto_small), api_color, id(api_status).state.c_str());
+
 touchscreen:
   - platform: cst816
     id: my_touchscreen
@@ -128,7 +133,7 @@ binary_sensor:
     x_min: 0
     x_max: 172
     y_min: 0
-    y_max: 64
+    y_max: 58
     on_press:
       - lambda: |-
           float pct = id(fan1_pct).state;
@@ -150,18 +155,15 @@ binary_sensor:
                 service: fan.set_percentage
                 data:
                   entity_id: fan.0x0c2a6ffffeaa1add
-                variables:
-                  pct: |-
-                    return id(target_level);
                 data_template:
-                  percentage: "{{ pct | int }}"
+                  percentage: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Fan 2 Touch"
     x_min: 0
     x_max: 172
-    y_min: 64
-    y_max: 128
+    y_min: 58
+    y_max: 116
     on_press:
       - lambda: |-
           float pct = id(fan2_pct).state;
@@ -183,18 +185,15 @@ binary_sensor:
                 service: fan.set_percentage
                 data:
                   entity_id: fan.0x0c2a6ffffeaa1b91
-                variables:
-                  pct: |-
-                    return id(target_level);
                 data_template:
-                  percentage: "{{ pct | int }}"
+                  percentage: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 1 Touch"
     x_min: 0
     x_max: 172
-    y_min: 128
-    y_max: 192
+    y_min: 116
+    y_max: 174
     on_press:
       - lambda: |-
           float b = id(light1_brightness).state;
@@ -217,18 +216,15 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.0x0c2a6ffffeaa1add
-                variables:
-                  pct: |-
-                    return id(target_level);
                 data_template:
-                  brightness_pct: "{{ pct | int }}"
+                  brightness_pct: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 2 Touch"
     x_min: 0
     x_max: 172
-    y_min: 192
-    y_max: 256
+    y_min: 174
+    y_max: 232
     on_press:
       - lambda: |-
           float b = id(light2_brightness).state;
@@ -251,18 +247,15 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.0x0c2a6ffffeaa1b91
-                variables:
-                  pct: |-
-                    return id(target_level);
                 data_template:
-                  brightness_pct: "{{ pct | int }}"
+                  brightness_pct: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 3 Touch"
     x_min: 0
     x_max: 172
-    y_min: 256
-    y_max: 320
+    y_min: 232
+    y_max: 290
     on_press:
       - lambda: |-
           float b = id(light3_brightness).state;
@@ -291,6 +284,19 @@ binary_sensor:
                 data_template:
                   brightness_pct: "{{ pct | int }}"
 
+text_sensor:
+  - platform: template
+    id: api_status
+    name: "API Status"
+    internal: true
+    lambda: |-
+      if (api::global_api_server != nullptr && api::global_api_server->is_connected()) {
+        return {"Connected"};
+      } else {
+        return {"Disconnected"};
+      }
+    update_interval: 5s
+
 sensor:
   - platform: wifi_signal
     id: wifi_rssi
@@ -301,6 +307,9 @@ sensor:
     entity_id: fan.0x0c2a6ffffeaa1add
     attribute: percentage
     internal: true
+    on_value:
+      - lambda: |-
+          ESP_LOGI("ha_sensor", "Fan1 pct updated: %.0f", x);
   - platform: homeassistant
     id: fan2_pct
     entity_id: fan.0x0c2a6ffffeaa1b91
