@@ -44,6 +44,9 @@ font:
   - file: "gfonts://Roboto"
     id: roboto_large
     size: 28
+  - file: "gfonts://Roboto"
+    id: roboto_small
+    size: 14
 
 spi:
   id: spi2_bus
@@ -64,41 +67,47 @@ display:
     cs_pin: 7
     dc_pin: 6
     reset_pin: 14
+    rotation: 90
     backlight_pin:
       number: 15
       inverted: true
     lambda: |-
-      int row_h = 64;
-      int text_y_offset = 18;
+      int row_h = 32;
+      int text_y_offset = 6;
       auto on_color = Color(0, 200, 0);
       auto off_color = Color(200, 0, 0);
       auto divider = Color(60, 60, 60);
 
       for (int i = 0; i < 5; i++) {
-        it.line(0, i * row_h, 170, i * row_h, divider);
+        it.line(0, i * row_h, it.get_width(), i * row_h, divider);
       }
 
       auto draw_row = [&](int row, const char *label, bool state) {
         int y = row * row_h + text_y_offset;
-        it.print(10, y, id(roboto_large), label);
-        it.print(120, y, id(roboto_large), state ? on_color : off_color, state ? "ON" : "OFF");
+        it.print(10, y, id(roboto), label);
+        it.print(280, y, id(roboto), state ? on_color : off_color, state ? "ON" : "OFF");
       };
 
       draw_row(0, "Fan 1", id(fan1_state).state == "on");
       draw_row(1, "Fan 2", id(fan2_state).state == "on");
-      draw_row(2, "Light1", id(light1_state).state == "on");
-      draw_row(3, "Light2", id(light2_state).state == "on");
-      draw_row(4, "Light3", id(light3_state).state == "on");
+      draw_row(2, "Light 1", id(light1_state).state == "on");
+      draw_row(3, "Light 2", id(light2_state).state == "on");
+      draw_row(4, "Light 3", id(light3_state).state == "on");
+
+      bool wifi_ok = id(wifi_rssi).has_state();
+      auto wifi_color = wifi_ok ? Color(0, 150, 0) : Color(100, 0, 0);
+      it.print(5, 160, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
 
 touchscreen:
   - platform: cst816
     id: my_touchscreen
     i2c_id: i2c_bus
+    interrupt_pin: 21
     skip_probe: true
     update_interval: 50ms
     transform:
       swap_xy: true
-      mirror_x: false
+      mirror_x: true
       mirror_y: false
 
 binary_sensor:
@@ -108,7 +117,7 @@ binary_sensor:
     x_min: 0
     x_max: 100
     y_min: 0
-    y_max: 20
+    y_max: 19
     on_press:
       - homeassistant.service:
           service: fan.toggle
@@ -119,8 +128,8 @@ binary_sensor:
     name: "Fan 2 Touch"
     x_min: 0
     x_max: 100
-    y_min: 20
-    y_max: 40
+    y_min: 19
+    y_max: 37
     on_press:
       - homeassistant.service:
           service: fan.toggle
@@ -131,8 +140,8 @@ binary_sensor:
     name: "Light 1 Touch"
     x_min: 0
     x_max: 100
-    y_min: 40
-    y_max: 60
+    y_min: 37
+    y_max: 56
     on_press:
       - homeassistant.service:
           service: light.toggle
@@ -143,8 +152,8 @@ binary_sensor:
     name: "Light 2 Touch"
     x_min: 0
     x_max: 100
-    y_min: 60
-    y_max: 80
+    y_min: 56
+    y_max: 74
     on_press:
       - homeassistant.service:
           service: light.toggle
@@ -155,8 +164,8 @@ binary_sensor:
     name: "Light 3 Touch"
     x_min: 0
     x_max: 100
-    y_min: 80
-    y_max: 100
+    y_min: 74
+    y_max: 93
     on_press:
       - homeassistant.service:
           service: light.toggle
@@ -179,3 +188,9 @@ text_sensor:
   - platform: homeassistant
     id: light3_state
     entity_id: light.living_room_lamp
+
+sensor:
+  - platform: wifi_signal
+    id: wifi_rssi
+    update_interval: 30s
+    internal: true
