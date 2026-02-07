@@ -115,6 +115,9 @@ touchscreen:
       swap_xy: true
       mirror_x: true
       mirror_y: true
+    on_touch:
+      - lambda: |-
+          ESP_LOGI("touch", "x=%d y=%d raw_x=%d raw_y=%d", touch.x, touch.y, touch.x_raw, touch.y_raw);
 
 binary_sensor:
   - platform: touchscreen
