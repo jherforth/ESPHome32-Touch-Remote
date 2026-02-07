@@ -84,11 +84,11 @@ display:
         it.print(120, y, id(roboto_large), state ? on_color : off_color, state ? "ON" : "OFF");
       };
 
-      draw_row(0, "Fan 1", id(fan1).state);
-      draw_row(1, "Fan 2", id(fan2).state);
-      draw_row(2, "Light1", id(light1).state);
-      draw_row(3, "Light2", id(light2).state);
-      draw_row(4, "Light3", id(light3).state);
+      draw_row(0, "Fan 1", id(fan1_state).state == "on");
+      draw_row(1, "Fan 2", id(fan2_state).state == "on");
+      draw_row(2, "Light1", id(light1_state).state == "on");
+      draw_row(3, "Light2", id(light2_state).state == "on");
+      draw_row(4, "Light3", id(light3_state).state == "on");
 
 touchscreen:
   - platform: cst816
@@ -110,7 +110,10 @@ binary_sensor:
     y_min: 0
     y_max: 20
     on_press:
-      - switch.toggle: fan1
+      - homeassistant.service:
+          service: fan.toggle
+          data:
+            entity_id: fan.0x0c2a6ffffeaa1add
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Fan 2 Touch"
@@ -119,7 +122,10 @@ binary_sensor:
     y_min: 20
     y_max: 40
     on_press:
-      - switch.toggle: fan2
+      - homeassistant.service:
+          service: fan.toggle
+          data:
+            entity_id: fan.0x0c2a6ffffeaa1b91
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 1 Touch"
@@ -128,7 +134,10 @@ binary_sensor:
     y_min: 40
     y_max: 60
     on_press:
-      - switch.toggle: light1
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.0x0c2a6ffffeaa1add
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 2 Touch"
@@ -137,7 +146,10 @@ binary_sensor:
     y_min: 60
     y_max: 80
     on_press:
-      - switch.toggle: light2
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.0x0c2a6ffffeaa1b91
   - platform: touchscreen
     touchscreen_id: my_touchscreen
     name: "Light 3 Touch"
@@ -146,26 +158,24 @@ binary_sensor:
     y_min: 80
     y_max: 100
     on_press:
-      - switch.toggle: light3
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.living_room_lamp
 
-switch:
-  - platform: gpio
-    pin: 16
-    name: "Fan 1"
-    id: fan1
-  - platform: gpio
-    pin: 17
-    name: "Fan 2"
-    id: fan2
-  - platform: gpio
-    pin: 23
-    name: "Light 1"
-    id: light1
-  - platform: gpio
-    pin: 20
-    name: "Light 2"
-    id: light2
-  - platform: gpio
-    pin: 2
-    name: "Light 3"
-    id: light3
+text_sensor:
+  - platform: homeassistant
+    id: fan1_state
+    entity_id: fan.0x0c2a6ffffeaa1add
+  - platform: homeassistant
+    id: fan2_state
+    entity_id: fan.0x0c2a6ffffeaa1b91
+  - platform: homeassistant
+    id: light1_state
+    entity_id: light.0x0c2a6ffffeaa1add
+  - platform: homeassistant
+    id: light2_state
+    entity_id: light.0x0c2a6ffffeaa1b91
+  - platform: homeassistant
+    id: light3_state
+    entity_id: light.living_room_lamp
