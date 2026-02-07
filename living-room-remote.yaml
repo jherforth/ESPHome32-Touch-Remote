@@ -95,13 +95,15 @@ display:
       auto border_color = Color(80, 80, 80);
       auto text_color = Color(255, 255, 255);
 
-      // Helper to draw a button box
-      auto draw_box = [&](int x, int y, const char* label) {
+      // Helper to draw a button box with two lines of text
+      auto draw_box = [&](int x, int y, const char* line1, const char* line2) {
         it.filled_rectangle(x, y, box_w, box_h, bg_color);
         it.rectangle(x, y, box_w, box_h, border_color);
         int text_x = x + box_w / 2;
-        int text_y = y + box_h / 2 - 10;
-        it.printf(text_x, text_y, id(roboto), text_color, TextAlign::CENTER, label);
+        int line1_y = y + box_h / 2 - 15;
+        int line2_y = y + box_h / 2 + 10;
+        it.printf(text_x, line1_y, id(roboto), text_color, TextAlign::CENTER, line1);
+        it.printf(text_x, line2_y, id(roboto), text_color, TextAlign::CENTER, line2);
       };
 
       // Column positions
@@ -109,26 +111,45 @@ display:
       int col2_x = margin + box_w + spacing;
 
       // Row 1: Fans Off, Fans Medium
-      draw_box(col1_x, margin, "Fans\nOff");
-      draw_box(col2_x, margin, "Fans\nMedium");
+      draw_box(col1_x, margin, "Fans", "Off");
+      draw_box(col2_x, margin, "Fans", "Medium");
 
       // Row 2: Fans High, Lights Off
-      draw_box(col1_x, margin + box_h + spacing, "Fans\nHigh");
-      draw_box(col2_x, margin + box_h + spacing, "Lights\nOff");
+      draw_box(col1_x, margin + box_h + spacing, "Fans", "High");
+      draw_box(col2_x, margin + box_h + spacing, "Lights", "Off");
 
       // Row 3: Dim Lights, Bright Lights
-      draw_box(col1_x, margin + 2 * (box_h + spacing), "Lights\nDim");
-      draw_box(col2_x, margin + 2 * (box_h + spacing), "Lights\nBright");
+      draw_box(col1_x, margin + 2 * (box_h + spacing), "Lights", "Dim");
+      draw_box(col2_x, margin + 2 * (box_h + spacing), "Lights", "Bright");
 
       // Status bar at bottom
       int status_y = 296;
-      bool wifi_ok = id(wifi_rssi).has_state();
-      auto wifi_color = wifi_ok ? Color(0, 200, 0) : Color(200, 0, 0);
-      it.print(5, status_y, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
 
+      // WiFi signal strength bars
+      if (id(wifi_rssi).has_state()) {
+        float rssi = id(wifi_rssi).state;
+        int bars = 0;
+        if (rssi > -60) bars = 4;
+        else if (rssi > -70) bars = 3;
+        else if (rssi > -80) bars = 2;
+        else bars = 1;
+
+        auto wifi_color = Color(0, 200, 0);
+        int bar_x = 5;
+        for (int i = 0; i < 4; i++) {
+          int bar_h = 3 + i * 2;
+          auto color = (i < bars) ? wifi_color : Color(50, 50, 50);
+          it.filled_rectangle(bar_x + i * 4, status_y + 12 - bar_h, 3, bar_h, color);
+        }
+      } else {
+        it.print(5, status_y, id(roboto_small), Color(200, 0, 0), "No WiFi");
+      }
+
+      // ESPHome API status with checkmark/X
       bool api_ok = id(api_status).state == "Connected";
-      auto api_color = api_ok ? Color(0, 200, 0) : Color(200, 100, 0);
-      it.print(60, status_y, id(roboto_small), api_color, id(api_status).state.c_str());
+      auto api_color = api_ok ? Color(0, 200, 0) : Color(200, 0, 0);
+      const char* status_icon = api_ok ? "\u2713" : "\u2717";  // ✓ or ✗
+      it.printf(60, status_y, id(roboto_small), api_color, "ESPHome %s", status_icon);
 
 touchscreen:
   - platform: cst816
