@@ -189,7 +189,6 @@ binary_sensor:
                 service: fan.set_percentage
                 data:
                   entity_id: fan.0x0c2a6ffffeaa1add
-                data_template:
                   percentage: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
@@ -219,7 +218,6 @@ binary_sensor:
                 service: fan.set_percentage
                 data:
                   entity_id: fan.0x0c2a6ffffeaa1b91
-                data_template:
                   percentage: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
@@ -250,7 +248,6 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.0x0c2a6ffffeaa1add
-                data_template:
                   brightness_pct: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
@@ -281,7 +278,6 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.0x0c2a6ffffeaa1b91
-                data_template:
                   brightness_pct: !lambda 'return id(target_level);'
   - platform: touchscreen
     touchscreen_id: my_touchscreen
@@ -312,7 +308,6 @@ binary_sensor:
                 service: light.turn_on
                 data:
                   entity_id: light.living_room_lamp
-                data_template:
                   brightness_pct: !lambda 'return id(target_level);'
 
 text_sensor:
