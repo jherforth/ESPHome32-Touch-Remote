@@ -41,9 +41,6 @@ wifi:
   password: !secret wifi_password
 
 globals:
-  - id: target_level
-    type: int
-    initial_value: '0'
   - id: touch_x
     type: int
     initial_value: '0'
@@ -86,54 +83,52 @@ display:
       number: 15
       inverted: true
     lambda: |-
-      int row_h = 58;
-      int text_y_offset = 15;
-      auto on_color = Color(0, 200, 0);
-      auto off_color = Color(200, 0, 0);
-      auto divider = Color(60, 60, 60);
+      it.fill(Color(0, 0, 0));
 
-      auto safe_pct = [](float val) -> int {
-        if (std::isnan(val)) return 0;
-        return (int)val;
+      // Grid layout: 2 columns x 3 rows
+      int margin = 8;
+      int spacing = 6;
+      int box_w = (172 - 2 * margin - spacing) / 2;  // 79px each
+      int box_h = 85;
+
+      auto bg_color = Color(30, 30, 30);
+      auto border_color = Color(80, 80, 80);
+      auto text_color = Color(255, 255, 255);
+
+      // Helper to draw a button box
+      auto draw_box = [&](int x, int y, const char* label) {
+        it.filled_rectangle(x, y, box_w, box_h, bg_color);
+        it.rectangle(x, y, box_w, box_h, border_color);
+        int text_x = x + box_w / 2;
+        int text_y = y + box_h / 2 - 10;
+        it.printf(text_x, text_y, id(roboto), text_color, TextAlign::CENTER, label);
       };
 
-      auto bright_pct = [](float val) -> int {
-        if (std::isnan(val)) return 0;
-        return (int)(val / 255.0 * 100.0);
-      };
+      // Column positions
+      int col1_x = margin;
+      int col2_x = margin + box_w + spacing;
 
-      int levels[5] = {
-        safe_pct(id(fan1_pct).state),
-        safe_pct(id(fan2_pct).state),
-        bright_pct(id(light1_brightness).state),
-        bright_pct(id(light2_brightness).state),
-        bright_pct(id(light3_brightness).state)
-      };
-      const char *labels[5] = {"Fan 1", "Fan 2", "Light 1", "Light 2", "Light 3"};
+      // Row 1: Fans Off, Fans Medium
+      draw_box(col1_x, margin, "Fans\nOff");
+      draw_box(col2_x, margin, "Fans\nMedium");
 
-      for (int i = 0; i < 5; i++) {
-        it.line(0, i * row_h, it.get_width(), i * row_h, divider);
-        int y = i * row_h + text_y_offset;
-        it.print(10, y, id(roboto_large), labels[i]);
-        const char *status;
-        if (levels[i] < 5) status = "Off";
-        else if (levels[i] < 40) status = "Low";
-        else if (levels[i] < 75) status = "Med";
-        else status = "High";
-        auto color = levels[i] > 0 ? on_color : off_color;
-        it.print(120, y, id(roboto_large), color, status);
-      }
+      // Row 2: Fans High, Lights Off
+      draw_box(col1_x, margin + box_h + spacing, "Fans\nHigh");
+      draw_box(col2_x, margin + box_h + spacing, "Lights\nOff");
 
+      // Row 3: Dim Lights, Bright Lights
+      draw_box(col1_x, margin + 2 * (box_h + spacing), "Lights\nDim");
+      draw_box(col2_x, margin + 2 * (box_h + spacing), "Lights\nBright");
+
+      // Status bar at bottom
+      int status_y = 296;
       bool wifi_ok = id(wifi_rssi).has_state();
-      auto wifi_color = wifi_ok ? Color(0, 150, 0) : Color(100, 0, 0);
-      it.print(5, 296, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
+      auto wifi_color = wifi_ok ? Color(0, 200, 0) : Color(200, 0, 0);
+      it.print(5, status_y, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
 
       bool api_ok = id(api_status).state == "Connected";
-      auto api_color = api_ok ? Color(0, 150, 0) : Color(100, 100, 0);
-      it.print(60, 296, id(roboto_small), api_color, id(api_status).state.c_str());
-
-      // Touch debug display
-      it.printf(120, 296, id(roboto_small), Color(255, 255, 0), "X:%d Y:%d", id(touch_x), id(touch_y));
+      auto api_color = api_ok ? Color(0, 200, 0) : Color(200, 100, 0);
+      it.print(60, status_y, id(roboto_small), api_color, id(api_status).state.c_str());
 
 touchscreen:
   - platform: cst816
@@ -158,157 +153,87 @@ touchscreen:
 binary_sensor:
   - platform: touchscreen
     touchscreen_id: my_touchscreen
-    name: "Fan 1 Touch"
-    x_min: 0
-    x_max: 172
-    y_min: 0
-    y_max: 58
+    name: "Fans Off"
+    x_min: 8
+    x_max: 87
+    y_min: 8
+    y_max: 93
     on_press:
-      - lambda: |-
-          ESP_LOGI("touch", "Fan 1 pressed!");
-          float pct = id(fan1_pct).state;
-          if (std::isnan(pct)) pct = 0;
-          ESP_LOGI("touch", "Current pct: %.0f, setting target to:", pct);
-          if (pct < 5) id(target_level) = 33;
-          else if (pct < 40) id(target_level) = 66;
-          else if (pct < 75) id(target_level) = 100;
-          else id(target_level) = 0;
-          ESP_LOGI("touch", "Target level: %d", id(target_level));
-      - if:
-          condition:
-            lambda: 'return id(target_level) == 0;'
-          then:
-            - lambda: 'ESP_LOGI("touch", "Calling fan.turn_off");'
-            - homeassistant.service:
-                service: fan.turn_off
-                data:
-                  entity_id: fan.0x0c2a6ffffeaa1add
-          else:
-            - lambda: 'ESP_LOGI("touch", "Calling fan.set_percentage to %d", id(target_level));'
-            - homeassistant.service:
-                service: fan.set_percentage
-                data:
-                  entity_id: fan.0x0c2a6ffffeaa1add
-                  percentage: !lambda 'return id(target_level);'
+      - lambda: 'ESP_LOGI("touch", "Fans Off pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.fans_off
+
   - platform: touchscreen
     touchscreen_id: my_touchscreen
-    name: "Fan 2 Touch"
-    x_min: 0
+    name: "Fans Medium"
+    x_min: 93
     x_max: 172
-    y_min: 58
-    y_max: 116
+    y_min: 8
+    y_max: 93
     on_press:
-      - lambda: |-
-          float pct = id(fan2_pct).state;
-          if (std::isnan(pct)) pct = 0;
-          if (pct < 5) id(target_level) = 33;
-          else if (pct < 40) id(target_level) = 66;
-          else if (pct < 75) id(target_level) = 100;
-          else id(target_level) = 0;
-      - if:
-          condition:
-            lambda: 'return id(target_level) == 0;'
-          then:
-            - homeassistant.service:
-                service: fan.turn_off
-                data:
-                  entity_id: fan.0x0c2a6ffffeaa1b91
-          else:
-            - homeassistant.service:
-                service: fan.set_percentage
-                data:
-                  entity_id: fan.0x0c2a6ffffeaa1b91
-                  percentage: !lambda 'return id(target_level);'
+      - lambda: 'ESP_LOGI("touch", "Fans Medium pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.fans_medium
+
   - platform: touchscreen
     touchscreen_id: my_touchscreen
-    name: "Light 1 Touch"
-    x_min: 0
-    x_max: 172
-    y_min: 116
-    y_max: 174
+    name: "Fans High"
+    x_min: 8
+    x_max: 87
+    y_min: 99
+    y_max: 184
     on_press:
-      - lambda: |-
-          float b = id(light1_brightness).state;
-          if (std::isnan(b)) b = 0;
-          float pct = b / 255.0 * 100.0;
-          if (pct < 5) id(target_level) = 33;
-          else if (pct < 40) id(target_level) = 66;
-          else if (pct < 75) id(target_level) = 100;
-          else id(target_level) = 0;
-      - if:
-          condition:
-            lambda: 'return id(target_level) == 0;'
-          then:
-            - homeassistant.service:
-                service: light.turn_off
-                data:
-                  entity_id: light.0x0c2a6ffffeaa1add
-          else:
-            - homeassistant.service:
-                service: light.turn_on
-                data:
-                  entity_id: light.0x0c2a6ffffeaa1add
-                  brightness_pct: !lambda 'return id(target_level);'
+      - lambda: 'ESP_LOGI("touch", "Fans High pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.fans_high
+
   - platform: touchscreen
     touchscreen_id: my_touchscreen
-    name: "Light 2 Touch"
-    x_min: 0
+    name: "Lights Off"
+    x_min: 93
     x_max: 172
-    y_min: 174
-    y_max: 232
+    y_min: 99
+    y_max: 184
     on_press:
-      - lambda: |-
-          float b = id(light2_brightness).state;
-          if (std::isnan(b)) b = 0;
-          float pct = b / 255.0 * 100.0;
-          if (pct < 5) id(target_level) = 33;
-          else if (pct < 40) id(target_level) = 66;
-          else if (pct < 75) id(target_level) = 100;
-          else id(target_level) = 0;
-      - if:
-          condition:
-            lambda: 'return id(target_level) == 0;'
-          then:
-            - homeassistant.service:
-                service: light.turn_off
-                data:
-                  entity_id: light.0x0c2a6ffffeaa1b91
-          else:
-            - homeassistant.service:
-                service: light.turn_on
-                data:
-                  entity_id: light.0x0c2a6ffffeaa1b91
-                  brightness_pct: !lambda 'return id(target_level);'
+      - lambda: 'ESP_LOGI("touch", "Lights Off pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.fan_lights_off
+
   - platform: touchscreen
     touchscreen_id: my_touchscreen
-    name: "Light 3 Touch"
-    x_min: 0
-    x_max: 172
-    y_min: 232
-    y_max: 290
+    name: "Lights Dim"
+    x_min: 8
+    x_max: 87
+    y_min: 190
+    y_max: 275
     on_press:
-      - lambda: |-
-          float b = id(light3_brightness).state;
-          if (std::isnan(b)) b = 0;
-          float pct = b / 255.0 * 100.0;
-          if (pct < 5) id(target_level) = 33;
-          else if (pct < 40) id(target_level) = 66;
-          else if (pct < 75) id(target_level) = 100;
-          else id(target_level) = 0;
-      - if:
-          condition:
-            lambda: 'return id(target_level) == 0;'
-          then:
-            - homeassistant.service:
-                service: light.turn_off
-                data:
-                  entity_id: light.living_room_lamp
-          else:
-            - homeassistant.service:
-                service: light.turn_on
-                data:
-                  entity_id: light.living_room_lamp
-                  brightness_pct: !lambda 'return id(target_level);'
+      - lambda: 'ESP_LOGI("touch", "Lights Dim pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.dim_fan_lights
+
+  - platform: touchscreen
+    touchscreen_id: my_touchscreen
+    name: "Lights Bright"
+    x_min: 93
+    x_max: 172
+    y_min: 190
+    y_max: 275
+    on_press:
+      - lambda: 'ESP_LOGI("touch", "Lights Bright pressed");'
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.bright_fan_lights
 
 text_sensor:
   - platform: template
@@ -327,32 +252,4 @@ sensor:
   - platform: wifi_signal
     id: wifi_rssi
     update_interval: 30s
-    internal: true
-  - platform: homeassistant
-    id: fan1_pct
-    entity_id: fan.0x0c2a6ffffeaa1add
-    attribute: percentage
-    internal: true
-    on_value:
-      - lambda: |-
-          ESP_LOGI("ha_sensor", "Fan1 pct updated: %.0f", x);
-  - platform: homeassistant
-    id: fan2_pct
-    entity_id: fan.0x0c2a6ffffeaa1b91
-    attribute: percentage
-    internal: true
-  - platform: homeassistant
-    id: light1_brightness
-    entity_id: light.0x0c2a6ffffeaa1add
-    attribute: brightness
-    internal: true
-  - platform: homeassistant
-    id: light2_brightness
-    entity_id: light.0x0c2a6ffffeaa1b91
-    attribute: brightness
-    internal: true
-  - platform: homeassistant
-    id: light3_brightness
-    entity_id: light.living_room_lamp
-    attribute: brightness
     internal: true
