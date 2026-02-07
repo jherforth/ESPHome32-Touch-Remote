@@ -3,27 +3,16 @@ esphome:
   friendly_name: Living Room Remote
   min_version: 2025.9.0
   name_add_mac_suffix: false
-  on_boot:
-    priority: 600
-    then:
-      - delay: 500ms
-      - lambda: |-
-          auto *bus = id(i2c_bus);
-          uint8_t addr = 0x15;
-          uint8_t data = 0x00;
-          for (int i = 0; i < 10; i++) {
-            auto err = bus->write(addr, &data, 1, true);
-            if (err == ESP_OK) {
-              ESP_LOGI("touch", "CST816D init OK on attempt %d", i + 1);
-              break;
-            }
-            vTaskDelay(pdMS_TO_TICKS(100));
-          }
 
 esp32:
   variant: esp32c6
   framework:
     type: esp-idf
+
+external_components:
+  - source: github://widget/esphome-components
+    components: [ axs5106 ]
+    refresh: 0s
 
 logger:
   level: DEBUG
@@ -57,12 +46,12 @@ spi:
   id: spi2_bus
   clk_pin: 5
   mosi_pin: 4
-  miso_pin: 19
 
 i2c:
   sda: 18
-  scl: 8
-  scan: true
+  scl: 19
+  frequency: 400kHz
+  scan: false
   id: i2c_bus
 
 display:
@@ -120,16 +109,17 @@ display:
       it.print(5, 296, id(roboto_small), wifi_color, wifi_ok ? "WiFi" : "No WiFi");
 
 touchscreen:
-  - platform: cst816
-    id: my_touchscreen
-    i2c_id: i2c_bus
-    interrupt_pin: 21
-    skip_probe: true
-    update_interval: 50ms
-    transform:
-      swap_xy: true
-      mirror_x: true
-      mirror_y: true
+  platform: axs5106
+  id: my_touchscreen
+  interrupt_pin: 21
+  reset_pin: 20
+  calibration:
+    x_min: 0
+    y_min: 0
+    x_max: 172
+    y_max: 320
+  transform:
+    mirror_x: true
 
 binary_sensor:
   - platform: touchscreen
