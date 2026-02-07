@@ -106,14 +106,13 @@ display:
         it.line(0, i * row_h, it.get_width(), i * row_h, divider);
         int y = i * row_h + text_y_offset;
         it.print(10, y, id(roboto_large), labels[i]);
-        char buf[8];
-        if (levels[i] == 0) {
-          snprintf(buf, sizeof(buf), "OFF");
-        } else {
-          snprintf(buf, sizeof(buf), "%d%%", levels[i]);
-        }
+        const char *status;
+        if (levels[i] < 5) status = "Off";
+        else if (levels[i] < 40) status = "Low";
+        else if (levels[i] < 75) status = "Med";
+        else status = "High";
         auto color = levels[i] > 0 ? on_color : off_color;
-        it.print(120, y, id(roboto_large), color, buf);
+        it.print(120, y, id(roboto_large), color, status);
       }
 
       bool wifi_ok = id(wifi_rssi).has_state();
