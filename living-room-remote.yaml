@@ -51,7 +51,9 @@ display:
     cs_pin: 7
     dc_pin: 6
     reset_pin: 14
-    backlight_pin: 15
+    backlight_pin:
+      number: 15
+      inverted: true
     lambda: |-
       it.print(0, 0, id(roboto), "Fan 1: ");
       it.print(100, 0, id(roboto), (bool(id(fan1).state) ? "ON" : "OFF"));
@@ -72,6 +74,9 @@ touchscreen:
   - platform: cst816
     id: my_touchscreen
     i2c_id: i2c_bus
+    interrupt_pin:
+      number: 22
+      mode: INPUT_PULLUP
     reset_pin: 21
     skip_probe: true
     update_interval: 50ms
