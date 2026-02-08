@@ -211,9 +211,9 @@ touchscreen:
       mirror_y: false
     on_touch:
       - lambda: |-
-          id(swipe_start_x) = touch.x;
-          id(last_touch_x) = touch.x;
-          int ty = touch.y;
+          id(swipe_start_x) = touch.y;
+          id(last_touch_x) = touch.y;
+          int ty = touch.x;
           int btn_idx = 0;
           if (ty >= 48 && ty < 120) btn_idx = 1;
           else if (ty >= 128 && ty < 200) btn_idx = 2;
@@ -221,7 +221,7 @@ touchscreen:
           id(pressed_btn) = btn_idx;
           ESP_LOGD("TOUCH", "Touch x=%d y=%d btn=%d page=%d", touch.x, touch.y, btn_idx, id(current_page));
     on_update:
-      - lambda: 'id(last_touch_x) = touches[0].x;'
+      - lambda: 'id(last_touch_x) = touches[0].y;'
     on_release:
       - lambda: |-
           int dx = id(last_touch_x) - id(swipe_start_x);
