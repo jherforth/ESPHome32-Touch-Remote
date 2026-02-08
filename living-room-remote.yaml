@@ -27,9 +27,6 @@ esp32:
 
 logger:
   level: DEBUG
-  logs:
-    homeassistant.service: VERBOSE
-    api: VERBOSE
 
 api:
   encryption:
