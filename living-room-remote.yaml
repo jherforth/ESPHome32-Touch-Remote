@@ -122,8 +122,9 @@ lvgl:
     - my_display
   touchscreens:
     - my_touchscreen
-  buffer_size: 25%
+  buffer_size: 10%
   disp_bg_color: 0x000000
+  page_wrap: false
   theme:
     button:
       bg_color: 0x1E1E1E
@@ -136,48 +137,28 @@ lvgl:
       pressed:
         bg_color: 0x006446
         border_color: 0x00B478
-  style_definitions:
-    - id: nav_dot
-      width: 10
-      height: 10
-      radius: 5
-      border_width: 0
-      pad_all: 0
-      bg_opa: COVER
-  widgets:
-    - tileview:
-        id: main_tileview
-        width: 100%
-        height: 100%
-        scrollbar_mode: "OFF"
-        bg_color: 0x000000
-        bg_opa: COVER
-        border_width: 0
-        pad_all: 0
-        on_value:
-          then:
-            - if:
-                condition:
-                  lambda: 'return tile == id(fans_tile);'
-                then:
-                  - lvgl.widget.update:
-                      id: dot_fans
-                      bg_color: 0xFFFFFF
-                  - lvgl.widget.update:
-                      id: dot_lights
-                      bg_color: 0x3C3C3C
-                else:
-                  - lvgl.widget.update:
-                      id: dot_fans
-                      bg_color: 0x3C3C3C
-                  - lvgl.widget.update:
-                      id: dot_lights
-                      bg_color: 0xFFFFFF
-        tiles:
-          - id: fans_tile
-            row: 0
-            column: 0
-            dir: HOR
+  pages:
+    - id: fans_page
+      on_load:
+        - lvgl.widget.update:
+            id: dot_fans
+            bg_color: 0xFFFFFF
+        - lvgl.widget.update:
+            id: dot_lights
+            bg_color: 0x3C3C3C
+      widgets:
+        - obj:
+            width: 100%
+            height: 100%
+            bg_opa: TRANSP
+            border_width: 0
+            pad_all: 0
+            scrollable: false
+            on_swipe_left:
+              - lvgl.page.show:
+                  id: lights_page
+                  animation: MOVE_LEFT
+                  time: 200ms
             widgets:
               - label:
                   align: TOP_MID
@@ -193,6 +174,7 @@ lvgl:
                   bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
+                  scrollable: false
                   layout:
                     type: FLEX
                     flex_flow: COLUMN
@@ -225,10 +207,27 @@ lvgl:
                           - label:
                               align: CENTER
                               text: "High"
-          - id: lights_tile
-            row: 0
-            column: 1
-            dir: HOR
+    - id: lights_page
+      on_load:
+        - lvgl.widget.update:
+            id: dot_fans
+            bg_color: 0x3C3C3C
+        - lvgl.widget.update:
+            id: dot_lights
+            bg_color: 0xFFFFFF
+      widgets:
+        - obj:
+            width: 100%
+            height: 100%
+            bg_opa: TRANSP
+            border_width: 0
+            pad_all: 0
+            scrollable: false
+            on_swipe_right:
+              - lvgl.page.show:
+                  id: fans_page
+                  animation: MOVE_RIGHT
+                  time: 200ms
             widgets:
               - label:
                   align: TOP_MID
@@ -244,6 +243,7 @@ lvgl:
                   bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
+                  scrollable: false
                   layout:
                     type: FLEX
                     flex_flow: COLUMN
@@ -295,22 +295,32 @@ lvgl:
           widgets:
             - obj:
                 id: dot_fans
-                styles: nav_dot
+                width: 10
+                height: 10
+                radius: 5
+                border_width: 0
+                pad_all: 0
+                bg_opa: COVER
                 bg_color: 0xFFFFFF
                 on_click:
-                  - lvgl.tileview.select:
-                      id: main_tileview
-                      tile_id: fans_tile
-                      animated: true
+                  - lvgl.page.show:
+                      id: fans_page
+                      animation: MOVE_RIGHT
+                      time: 200ms
             - obj:
                 id: dot_lights
-                styles: nav_dot
+                width: 10
+                height: 10
+                radius: 5
+                border_width: 0
+                pad_all: 0
+                bg_opa: COVER
                 bg_color: 0x3C3C3C
                 on_click:
-                  - lvgl.tileview.select:
-                      id: main_tileview
-                      tile_id: lights_tile
-                      animated: true
+                  - lvgl.page.show:
+                      id: lights_page
+                      animation: MOVE_LEFT
+                      time: 200ms
       - label:
           id: lbl_wifi
           align: BOTTOM_LEFT
