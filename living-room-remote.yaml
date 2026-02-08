@@ -213,11 +213,11 @@ touchscreen:
       - lambda: |-
           id(swipe_start_x) = touch.y;
           id(last_touch_x) = touch.y;
-          int ty = 320 - touch.x;
+          int ty = 320 - (touch.x * 320 / 172);
           int btn_idx = 0;
-          if (ty >= 30 && ty < 124) btn_idx = 1;
+          if (ty >= 40 && ty < 124) btn_idx = 1;
           else if (ty >= 124 && ty < 204) btn_idx = 2;
-          else if (ty >= 204 && ty < 295) btn_idx = 3;
+          else if (ty >= 204 && ty < 290) btn_idx = 3;
           id(pressed_btn) = btn_idx;
           ESP_LOGD("TOUCH", "Touch x=%d y=%d btn=%d page=%d", touch.x, touch.y, btn_idx, id(current_page));
     on_update:
