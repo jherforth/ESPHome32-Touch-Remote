@@ -90,18 +90,34 @@ script:
           data:
             entity_id: scene.bright_fan_lights
 
+output:
+  - platform: ledc
+    pin:
+      number: 15
+      inverted: true
+    id: backlight_pwm
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: "Display Backlight"
+    id: backlight
+    restore_mode: ALWAYS_ON
+
 display:
-  - platform: st7789v
+  - platform: mipi_spi
     id: my_display
     spi_id: spi2_bus
-    model: Waveshare 1.47in 172X320
+    model: ST7789V
     cs_pin: 7
     dc_pin: 6
     reset_pin: 14
     rotation: 180
-    backlight_pin:
-      number: 15
-      inverted: true
+    dimensions:
+      width: 172
+      height: 320
+      offset_width: 34
+      offset_height: 0
     auto_clear_enabled: false
     update_interval: never
 
