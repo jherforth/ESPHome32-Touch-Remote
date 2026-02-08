@@ -221,7 +221,7 @@ touchscreen:
           id(pressed_btn) = btn_idx;
           ESP_LOGD("TOUCH", "Touch x=%d y=%d btn=%d page=%d", touch.x, touch.y, btn_idx, id(current_page));
     on_update:
-      - lambda: 'id(last_touch_x) = touch.x;'
+      - lambda: 'id(last_touch_x) = touches[0].x;'
     on_release:
       - lambda: |-
           int dx = id(last_touch_x) - id(swipe_start_x);
