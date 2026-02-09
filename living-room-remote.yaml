@@ -129,7 +129,7 @@ display:
       offset_height: 0
     auto_clear_enabled: false
     update_interval: never
-    color_order: rgb
+    color_order: grb
     invert_colors: false
 
 touchscreen:
