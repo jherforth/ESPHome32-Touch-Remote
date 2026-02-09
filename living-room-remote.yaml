@@ -53,6 +53,15 @@ i2c:
   id: i2c_bus
 
 script:
+  - id: wake_display
+    then:
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+      - delay: 60s
+      - light.turn_on:
+          id: backlight
+          brightness: 5%
   - id: scene_fans_off
     then:
       - homeassistant.service:
@@ -134,6 +143,8 @@ touchscreen:
       swap_xy: false
       mirror_x: true
       mirror_y: true
+    on_touch:
+      - script.execute: wake_display
 
 lvgl:
   displays:
