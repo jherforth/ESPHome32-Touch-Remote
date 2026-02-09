@@ -129,9 +129,9 @@ touchscreen:
     skip_probe: true
     update_interval: 50ms
     transform:
-      swap_xy: true
-      mirror_x: false
-      mirror_y: true
+      swap_xy: false
+      mirror_x: true
+      mirror_y: false
 
 lvgl:
   displays:
