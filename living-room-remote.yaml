@@ -130,8 +130,8 @@ touchscreen:
     update_interval: 50ms
     transform:
       swap_xy: true
-      mirror_x: true
-      mirror_y: false
+      mirror_x: false
+      mirror_y: true
 
 lvgl:
   displays:
