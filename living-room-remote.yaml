@@ -131,7 +131,7 @@ touchscreen:
     transform:
       swap_xy: false
       mirror_x: true
-      mirror_y: false
+      mirror_y: true
 
 lvgl:
   displays:
