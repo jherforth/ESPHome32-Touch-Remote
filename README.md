@@ -1,72 +1,150 @@
-# ESPHome Living Room Remote
+# Living Room Remote
 
-ESPHome configuration for Waveshare ESP32-C6-LCD-1.9 board to control Home Assistant devices via touch interface.
+ESPHome configuration for a touch-screen remote control to manage Home Assistant scenes. Built for the Waveshare ESP32-C6-LCD-1.9 board with a 1.9" color display.
 
-## Critical Fix Applied
+## Hardware
 
-### Problem
-- WiFi showed connected but no API connection to Home Assistant
-- Touch commands not working
-- State updates not syncing from Home Assistant
+**Board**: Waveshare ESP32-C6-LCD-1.9
+- ESP32-C6 microcontroller
+- 1.9" ST7789V display (172x320 pixels)
+- CST816 capacitive touch controller
+- Built-in WiFi
 
-### Root Cause
-1. **Service call syntax errors**: Mixed `variables` and `data_template` which doesn't work in ESPHome
-2. **Touch coordinates misaligned**: Zones didn't match the 58-pixel row heights
-3. **Missing API encryption**: Device wasn't properly authenticated with Home Assistant
+## Features
 
-### Solution
-All three issues have been fixed in this update.
+**Touch Interface**
+- Tab-based UI with "Fans" and "Lights" sections
+- Three buttons per tab to trigger different scenes
+- Auto-dimming backlight (dims to 5% after 60 seconds)
+- Touch to wake display to full brightness
 
-## CRITICAL: Re-Adding Device to Home Assistant
+**Status Indicators**
+- WiFi connection status with signal strength color coding
+  - Green: Strong signal (> -60 dBm)
+  - Yellow: Weak signal (-60 to -80 dBm)
+  - Red: Poor signal or disconnected
+- Home Assistant API connection status
+  - Green: Connected
+  - Red: Disconnected
 
-**If you already added your device to Home Assistant before, you MUST remove and re-add it:**
+**Scene Control**
+- Fans: Off / Medium / High
+- Lights: Off / Dim / Bright
+- All actions trigger corresponding Home Assistant scenes
 
-1. **Remove old device**:
-   - Go to Settings → Devices & Services → ESPHome
-   - Find your device "Living Room Remote"
-   - Click the device and choose "Delete"
+## Setup
 
-2. **Re-flash with updated config**:
-   - Upload the updated YAML to your ESP32-C6 board
-   - Wait for it to boot and connect to WiFi
+### Prerequisites
 
-3. **Re-add to Home Assistant**:
-   - Go to Settings → Devices & Services
-   - Click "Add Integration"
-   - Select "ESPHome"
-   - It should auto-discover your device
-   - Enter the API encryption key from your secrets.yaml
+1. ESPHome installed and configured
+2. Home Assistant with ESPHome integration
+3. Home Assistant scenes configured:
+   - `scene.fans_off`
+   - `scene.fans_medium`
+   - `scene.fans_high`
+   - `scene.fan_lights_off`
+   - `scene.dim_fan_lights`
+   - `scene.bright_fan_lights`
 
-4. **Verify connection**:
-   - Look at the bottom of your touch remote display
-   - You should see "WiFi" in green AND "Connected" in green
-   - If "Disconnected" shows, the API encryption key doesn't match
+### Configuration
 
-## What's on the Display
+Create a `secrets.yaml` file with your credentials:
 
-**Bottom Status Bar:**
-- "WiFi" (green) = WiFi connected
-- "Connected" (green) = Home Assistant API connected
-- "Disconnected" (yellow) = API not connected - re-add device
+```yaml
+wifi_ssid: "Your WiFi SSID"
+wifi_password: "Your WiFi Password"
+api_encryption_key: "your-32-character-encryption-key"
+```
 
-**Device Rows (touch to cycle Off → Low → Med → High):**
-- Row 1: Fan 1 (y: 0-58)
-- Row 2: Fan 2 (y: 58-116)
-- Row 3: Light 1 (y: 116-174)
-- Row 4: Light 2 (y: 174-232)
-- Row 5: Light 3 (y: 232-290)
+### Installation
 
-## Debugging
+1. Connect your ESP32-C6 board to your computer
+2. Compile and upload the configuration:
+   ```bash
+   esphome run living-room-remote.yaml
+   ```
+3. Wait for the device to boot and connect to WiFi
+4. Add to Home Assistant:
+   - Settings → Devices & Services → Add Integration → ESPHome
+   - Enter the API encryption key when prompted
 
-To check logs from your device:
-1. Open ESPHome dashboard
-2. Click "Logs" on your device
-3. Watch for:
-   - `[touch]` logs showing touch coordinates when you tap
-   - `[ha_sensor]` logs showing when Home Assistant updates are received
-   - `[api]` logs showing connection status
+## Display Layout
 
-Common issues:
-- **"Disconnected" shows**: API encryption key mismatch - remove and re-add device
-- **Touch not registering**: Check logs for touch coordinates, may need transform adjustment
-- **No state updates**: Verify entity IDs match your actual devices in Home Assistant
+**Top Section (y: 0-48)**
+- Tab bar with "Fans" and "Lights" tabs
+- Active tab highlighted in green
+
+**Content Section (y: 48-280)**
+- Three buttons (72px height each, 8px spacing)
+- Each button triggers a Home Assistant scene
+
+**Status Bar (Bottom)**
+- "WiFi" indicator (bottom-left)
+- "HA" indicator (bottom-right)
+
+## Customization
+
+**Changing Scenes**
+Edit the script sections to match your Home Assistant scene entity IDs:
+
+```yaml
+script:
+  - id: scene_fans_off
+    then:
+      - homeassistant.service:
+          service: scene.turn_on
+          data:
+            entity_id: scene.your_scene_name
+```
+
+**Adjusting Colors**
+Colors are defined in hex format (0xRRGGBB):
+- Active tab: `0x006446` (green)
+- Button background: `0xFFFFFF` (white)
+- Text color: `0x1E1E1E` (dark gray)
+
+**Screen Timeout**
+Change the dimming delay in the `wake_display` script:
+
+```yaml
+- delay: 60s  # Change to desired seconds
+```
+
+## Troubleshooting
+
+**Display not responding to touch**
+- Check ESPHome logs for touch coordinates
+- Verify CST816D initialization messages on boot
+
+**API not connecting**
+- Verify encryption key matches in both ESPHome and Home Assistant
+- Check that device shows as "Online" in ESPHome dashboard
+- Remove and re-add the integration in Home Assistant
+
+**Scenes not triggering**
+- Verify scene entity IDs exist in Home Assistant
+- Check Home Assistant logs for service call errors
+- Ensure scenes are configured correctly
+
+**Display appears inverted**
+- Rotation is set to 180 degrees in configuration
+- Adjust `rotation:` value if needed (0, 90, 180, 270)
+
+## Technical Details
+
+**Communication**
+- I2C bus for touchscreen (SDA: GPIO 18, SCL: GPIO 8)
+- SPI bus for display (CLK: GPIO 5, MOSI: GPIO 4)
+- WiFi for Home Assistant API connection
+
+**Display Configuration**
+- Model: ST7789V
+- Resolution: 172x320 (with 34px width offset)
+- Color order: RGB
+- Inverted colors enabled
+- Manual update control (LVGL handles rendering)
+
+**Power Management**
+- Backlight PWM control on GPIO 15
+- Default: Always on
+- Auto-dim to 5% after timeout
