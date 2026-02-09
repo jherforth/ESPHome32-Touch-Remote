@@ -156,12 +156,12 @@ lvgl:
   page_wrap: false
   theme:
     button:
-      bg_color: 0x1E1E1E
+      bg_color: 0xFFFFFF
       bg_opa: COVER
       border_color: 0x505050
       border_width: 1
       radius: 12
-      text_color: 0xFFFFFF
+      text_color: 0x1E1E1E
       text_font: montserrat_28
       pressed:
         bg_color: 0x006446
@@ -183,7 +183,7 @@ lvgl:
                   y: 4
                   width: 164
                   height: 36
-                  bg_color: 0x1E1E1E
+                  bg_color: 0xFFFFFF
                   bg_opa: COVER
                   border_width: 1
                   border_color: 0x505050
@@ -210,10 +210,10 @@ lvgl:
                               bg_color: 0x006446
                           - lvgl.label.update:
                               id: lbl_tab_fans
-                              text_color: 0xFFFFFF
+                              text_color: 0x1E1E1E
                           - lvgl.widget.update:
                               id: tab_lights
-                              bg_color: 0x1E1E1E
+                              bg_color: 0xFFFFFF
                           - lvgl.label.update:
                               id: lbl_tab_lights
                               text_color: 0x808080
@@ -226,13 +226,13 @@ lvgl:
                               id: lbl_tab_fans
                               align: CENTER
                               text: "Fans"
-                              text_color: 0xFFFFFF
+                              text_color: 0x1E1E1E
                               text_font: montserrat_18
                     - obj:
                         id: tab_lights
                         width: 50%
                         height: 100%
-                        bg_color: 0x1E1E1E
+                        bg_color: 0xFFFFFF
                         bg_opa: COVER
                         border_width: 0
                         radius: 4
@@ -243,10 +243,10 @@ lvgl:
                               bg_color: 0x006446
                           - lvgl.label.update:
                               id: lbl_tab_lights
-                              text_color: 0xFFFFFF
+                              text_color: 0x1E1E1E
                           - lvgl.widget.update:
                               id: tab_fans
-                              bg_color: 0x1E1E1E
+                              bg_color: 0xFFFFFF
                           - lvgl.label.update:
                               id: lbl_tab_fans
                               text_color: 0x808080
