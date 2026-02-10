@@ -130,7 +130,7 @@ display:
     auto_clear_enabled: false
     update_interval: never
     color_order: rgb
-    invert_colors: true
+    invert_colors: false
 
 touchscreen:
   - platform: cst816
@@ -161,7 +161,7 @@ lvgl:
       border_color: 0x505050
       border_width: 1
       radius: 12
-      text_color: 0x1E1E1E
+      text_color: 0x000000
       text_font: montserrat_28
       pressed:
         bg_color: 0x006446
@@ -172,7 +172,7 @@ lvgl:
         - obj:
             width: 100%
             height: 100%
-            bg_opa: TRANSP
+            #bg_opa: TRANSP
             border_width: 0
             pad_all: 0
             scrollable: false
@@ -199,7 +199,7 @@ lvgl:
                         id: tab_fans
                         width: 50%
                         height: 100%
-                        bg_color: 0x006446
+                        bg_color: 0xfc69e0
                         bg_opa: COVER
                         border_width: 0
                         radius: 4
@@ -207,10 +207,10 @@ lvgl:
                         on_click:
                           - lvgl.widget.update:
                               id: tab_fans
-                              bg_color: 0x006446
+                              bg_color: 0xfc69e0
                           - lvgl.label.update:
                               id: lbl_tab_fans
-                              text_color: 0x1E1E1E
+                              text_color: 0x000000
                           - lvgl.widget.update:
                               id: tab_lights
                               bg_color: 0xFFFFFF
@@ -226,7 +226,7 @@ lvgl:
                               id: lbl_tab_fans
                               align: CENTER
                               text: "Fans"
-                              text_color: 0x1E1E1E
+                              text_color: 0xFFFFFF
                               text_font: montserrat_18
                     - obj:
                         id: tab_lights
@@ -243,13 +243,13 @@ lvgl:
                               bg_color: 0x006446
                           - lvgl.label.update:
                               id: lbl_tab_lights
-                              text_color: 0x1E1E1E
+                              text_color: 0xFFFFFF
                           - lvgl.widget.update:
                               id: tab_fans
                               bg_color: 0xFFFFFF
                           - lvgl.label.update:
                               id: lbl_tab_fans
-                              text_color: 0x808080
+                              text_color: 0x000000
                           - lvgl.widget.hide:
                               id: content_fans
                           - lvgl.widget.show:
@@ -259,7 +259,7 @@ lvgl:
                               id: lbl_tab_lights
                               align: CENTER
                               text: "Lights"
-                              text_color: 0x808080
+                              text_color: 0x000000
                               text_font: montserrat_18
               - obj:
                   id: content_fans
@@ -267,7 +267,7 @@ lvgl:
                   y: 48
                   width: 164
                   height: 232
-                  bg_opa: TRANSP
+                  #bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
                   scrollable: false
@@ -312,7 +312,7 @@ lvgl:
                   y: 48
                   width: 164
                   height: 232
-                  bg_opa: TRANSP
+                  #bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
                   scrollable: false
@@ -391,11 +391,11 @@ text_sensor:
             then:
               - lvgl.label.update:
                   id: lbl_api
-                  text_color: 0x00C800
+                  text_color: 0xfc69e0
             else:
               - lvgl.label.update:
                   id: lbl_api
-                  text_color: 0xC80000
+                  text_color: 0x20ff0a
 
 binary_sensor:
   - platform: status
@@ -404,11 +404,11 @@ binary_sensor:
     on_press:
       - lvgl.label.update:
           id: lbl_wifi
-          text_color: 0x00C800
+          text_color: 0xfc69e0
     on_release:
       - lvgl.label.update:
           id: lbl_wifi
-          text_color: 0xC80000
+          text_color: 0x20ff0a
 
 sensor:
   - platform: wifi_signal
@@ -427,7 +427,7 @@ sensor:
                   then:
                     - lvgl.label.update:
                         id: lbl_wifi
-                        text_color: 0x00C800
+                        text_color: 0xfcc254
                   else:
                     - if:
                         condition:
@@ -435,12 +435,12 @@ sensor:
                         then:
                           - lvgl.label.update:
                               id: lbl_wifi
-                              text_color: 0xC8C800
+                              text_color: 0xff7024
                         else:
                           - lvgl.label.update:
                               id: lbl_wifi
-                              text_color: 0xC80000
+                              text_color: 0x20ff0a
             else:
               - lvgl.label.update:
                   id: lbl_wifi
-                  text_color: 0xC80000
+                  text_color: 0x20ff0a
