@@ -471,7 +471,7 @@ sensor:
     id: battery_voltage
     unit_of_measurement: "V"
     accuracy_decimals: 2
-    update_interval: 60s
+    update_interval: 600s
     attenuation: auto
     filters:
       - multiply: 1.8          # keep this — we'll tune it based on logs
@@ -488,7 +488,7 @@ sensor:
     unit_of_measurement: "%"
     icon: "mdi:battery"
     accuracy_decimals: 0
-    update_interval: 60s
+    update_interval: 600s
     lambda: |-
       if (isnan(id(battery_voltage).state)) return {};
       float v = id(battery_voltage).state;
